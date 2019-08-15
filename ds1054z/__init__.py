@@ -43,7 +43,9 @@ class DS1054Z(vxi11.Instrument):
     MAX_CHANNEL_SCALE = 1E1
     MIN_PROBE_RATIO = 0.01
     MAX_PROBE_RATIO = 1000
-    CHANNEL_LIST = ("CHAN1", "CHAN2", "CHAN3", "CHAN4", "MATH")
+    CHANNEL_LIST = ("CHAN1", "CHAN2", "CHAN3", "CHAN4", "MATH",
+                    "D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7",
+                    "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15")
 
     def __init__(self, host, *args, **kwargs):
         self.start = clock()
@@ -349,6 +351,13 @@ class DS1054Z(vxi11.Instrument):
             value = float(value)
         return possible_values
 
+    def _digital_channel(self, channel):
+        """
+        Check if the channel is a digital channel
+        """
+
+        return channel.startswith("D")
+
     @property
     def timebase_offset(self):
         """
@@ -638,7 +647,10 @@ class DS1054Z(vxi11.Instrument):
         """
         channel_list = []
         for channel in self.CHANNEL_LIST:
-            if self.query(":{0}:DISPlay?".format(channel)) == '1':
+            if self._digital_channel(channel):
+                if self.query(":LA:DIGital{0}:DISPlay?".format(channel.replace("D", ""))) == '1':
+                    channel_list.append(channel)
+            elif self.query(":{0}:DISPlay?".format(channel)) == '1':
                 channel_list.append(channel)
         return channel_list
 
@@ -647,7 +659,10 @@ class DS1054Z(vxi11.Instrument):
         Display (enable) or hide (disable) a channel for aquisition and display
         """
         channel = self._interpret_channel(channel)
-        self.write(':{0}:DISPlay {1}'.format(channel, int(enable)))
+        if self._digital_channel(channel):
+            self.write("LA:DIGital{0}:DISPlay {1}".format(channel.replace("D", ""), int(enable)))
+        else:
+            self.write(':{0}:DISPlay {1}'.format(channel, int(enable)))
 
     def display_only_channel(self, channel):
         """
@@ -655,7 +670,7 @@ class DS1054Z(vxi11.Instrument):
         """
         channel = self._interpret_channel(channel)
         for ch in self.CHANNEL_LIST:
-            self.write(':{0}:DISPlay {1}'.format(ch, int(ch == channel)))
+            self.display_channel(ch, ch == channel)
 
     def get_probe_ratio(self, channel):
         """
