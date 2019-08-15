@@ -31,7 +31,7 @@ class DS1054Z(vxi11.Instrument):
     :ivar firmware: e.g. ``'00.04.03.SP1'``
     """
 
-    IDN_PATTERN = r'^RIGOL TECHNOLOGIES,DS1\d\d\dZ( Plus)?,'
+    IDN_PATTERN = r'^RIGOL TECHNOLOGIES,D*M*SO*1\d\d\dZ( Plus)?,'
     ENCODING = 'utf-8'
     H_GRID = 12
     SAMPLES_ON_DISPLAY = 1200
